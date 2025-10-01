@@ -1,16 +1,32 @@
 const express = require("express");
 const cors = require("cors");
-const contactsRoutes = require('./app/routes/contact.route');
+const contactsRoutes = require("./app/routes/contact.route");
+const ApiError = require("./app/api-error");
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
+// route mặc định
 app.get("/", (req, res) => {
-    res.json({ message: "Welcome to contact book application."});
+    res.json({ message: "Welcome to contact book application" });
 });
 
+// routes chính
 app.use("/api/contacts", contactsRoutes);
+
+// handle 404 (không tìm thấy resource)
+app.use((req, res, next) => {
+    next(new ApiError(404, "Resource not found"));
+});
+
+// centralized error handling
+app.use((err, req, res, next) => {
+    console.error(err); // log lỗi ra console cho dev dễ debug
+    res.status(err.statusCode || 500).json({
+        message: err.message || "Internal Server Error",
+    });
+});
 
 module.exports = app;
